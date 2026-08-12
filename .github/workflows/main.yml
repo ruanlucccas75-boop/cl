@@ -1,50 +1,35 @@
-name: CI/CD Build & Deploy
+name: junder (.exe)
 
 on:
   push:
     branches: ["main"]
   workflow_dispatch:
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: "pages"
-  cancel-in-progress: true
-
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  build-exe:
+    runs-on: windows-latest
+
     steps:
-      - name: Baixar repositório
+      - name: Baixar código do repositório
         uses: actions/checkout@v4
 
       - name: Configurar Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
 
       - name: Instalar dependências
         run: npm ci
 
-      - name: Criar Build
+      - name: Compilar o app (Build)
         run: npm run build
 
-      - name: Upload dos arquivos para hospedagem
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: './dist'
+      - name: Criar Executável Windows
+        run: |
+          npx nativefier --name "MeuApp" "./dist" ./dist-app --single-instance
 
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Deploy no GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Disponibilizar download do .exe
+        uses: actions/upload-artifact@v4
+        with:
+          name: claude-junder-EXE
+          path: dist-app/
